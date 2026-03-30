@@ -31,10 +31,12 @@ connectDB();
 
 // CORS Configuration - Enterprise level
 const allowedOrigins = [
+  'https://ecommerce-ai-client-shek-irfan-ss-projects.vercel.app',
+  'https://ecommerce-ai-client.vercel.app',
   'https://verdant-alpaca-762d16.netlify.app',
   process.env.CLIENT_URL,
   'http://localhost:3000',
-  'http://localhost:5173', // Vite default
+  'http://localhost:5173',
 ].filter(Boolean);
 
 const corsOptions = {
@@ -42,11 +44,20 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if the origin matches any in our allowed list
+    const isAllowed = allowedOrigins.some(ao => {
+      if (ao.includes('*')) {
+        const regex = new RegExp('^' + ao.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+        return regex.test(origin);
+      }
+      return ao === origin;
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked for origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false); // Return false instead of Error to avoid 500 status
     }
   },
   credentials: true,
